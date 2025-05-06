@@ -10,15 +10,10 @@ import {
   ThumbsDown,
   Bot,
   User,
-  Copy,
-  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type Message = {
   id: string;
@@ -32,11 +27,8 @@ type Message = {
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [exportIframe,setExportIframe] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const exportTextRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMessages([
@@ -146,36 +138,6 @@ export default function ChatInterface() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString([], {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
-
-  const getExportText = () => {
-    const iframeUrl = `http://localhost:3000/chat-frame
-        ?apikey=be65bc78-0e34-4baf-8db3-4ba386f0757a`;
-
-  return `
-      <iframe
-        src="${iframeUrl}"
-        width="400"
-        height="600"
-        allow="clipboard-write"
-      ></iframe>
-  `
-  }
-
-  const copyToClipboard = () => {
-    const text = getExportText()
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
-  }
-
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-4">
@@ -183,10 +145,10 @@ export default function ChatInterface() {
           <Bot className="h-5 w-5 text-blue-500" />
           <h2 className="text-lg font-semibold">Chat Session</h2>
         </div>
-        <Button onClick={() => setExportIframe(true)} variant="outline" size="sm" className="flex items-center gap-1 cursor-pointer">
+        {/* <Button variant="outline" size="sm" className="flex items-center gap-1">
           <Download className="h-4 w-4" />
           <span>Export Chat</span>
-        </Button>
+        </Button> */}
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {messages.map((message) => (
@@ -304,54 +266,6 @@ export default function ChatInterface() {
           </Button>
         </div>
       </div>
-
-      {exportIframe && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            // Close the overlay when clicking the background (not the card)
-            if (e.target === e.currentTarget) {
-              setExportIframe(false)
-            }
-          }}
-        >
-          <Card className="w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div
-              ref={exportTextRef}
-              className="flex-1 overflow-y-auto p-4 whitespace-pre-wrap text-orange-400 font-mono text-sm bg-gray-50 dark:bg-gray-900 rounded-b-lg"
-            >
-              <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "flex items-center gap-1 cursor-pointer",
-                      copied && "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-                    )}
-                    onClick={copyToClipboard}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-              </div>
-              <SyntaxHighlighter
-                  language="html"
-                  style={oneDark}
-                  customStyle={{
-                    background: 'transparent',
-                    fontSize: '1.1rem',
-                    fontFamily: 'monospace',
-                    color: '#fb923c', // Tailwind orange-400
-                  }}
-                  codeTagProps={{
-                    className: 'whitespace-pre-wrap'
-                  }}
-                >
-                  {getExportText()}
-            </SyntaxHighlighter>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

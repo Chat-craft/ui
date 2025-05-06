@@ -17,8 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type Message = {
   id: string;
@@ -155,8 +153,7 @@ export default function ChatInterface() {
   }
 
   const getExportText = () => {
-    const iframeUrl = `http://localhost:3000/chat-frame
-        ?apikey=be65bc78-0e34-4baf-8db3-4ba386f0757a`;
+    const iframeUrl = "http://localhost:3000/chat-frame";
 
   return `
       <iframe
@@ -316,38 +313,34 @@ export default function ChatInterface() {
           }}
         >
           <Card className="w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-4">
+              <div className="flex items-center gap-2">
+                <Download className="h-5 w-5 text-blue-500" />
+                <h2 className="text-lg font-semibold">Chat Export</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "flex items-center gap-1 cursor-pointer",
+                    copied && "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+                  )}
+                  onClick={copyToClipboard}
+                >
+                  <Copy className="h-4 w-4" />
+                  <span>{copied ? "Copied!" : "Copy Text"}</span>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setExportIframe(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <div
               ref={exportTextRef}
               className="flex-1 overflow-y-auto p-4 whitespace-pre-wrap text-orange-400 font-mono text-sm bg-gray-50 dark:bg-gray-900 rounded-b-lg"
             >
-              <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "flex items-center gap-1 cursor-pointer",
-                      copied && "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-                    )}
-                    onClick={copyToClipboard}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-              </div>
-              <SyntaxHighlighter
-                  language="html"
-                  style={oneDark}
-                  customStyle={{
-                    background: 'transparent',
-                    fontSize: '1.1rem',
-                    fontFamily: 'monospace',
-                    color: '#fb923c', // Tailwind orange-400
-                  }}
-                  codeTagProps={{
-                    className: 'whitespace-pre-wrap'
-                  }}
-                >
-                  {getExportText()}
-            </SyntaxHighlighter>
+              {getExportText()}
             </div>
           </Card>
         </div>
