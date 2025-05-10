@@ -153,7 +153,7 @@ export default function ChatInterface() {
   }
 
   const getExportText = () => {
-    const iframeUrl = "http://localhost:3000/chat-frame";
+    const iframeUrl = "http://localhost:3000/chat-iframe";
 
   return `
       <iframe

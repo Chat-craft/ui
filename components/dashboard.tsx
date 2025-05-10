@@ -29,9 +29,9 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("bot-management");
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden ${theme === "dark" ? "bg-slate-950 border-gray-800" : "bg-white border-gray-200"}`}>
+    <div className={`flex h-screen w-full overflow-hidden bg-slate-950 border-gray-800 `}>
       {/* Sidebar */}
-      <aside className={`w-64 border-r ${theme === "light" ? "bg-white border-gray-200" : "border-gray-800  bg-slate-900"}   flex flex-col`}>
+      <aside className={`w-64 border-r border-gray-800  bg-slate-900 text-white flex flex-col`}>
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center gap-2">
           <img src="./logo.png" className="h-10 w-10 text-blue-500" />
           <h1 className="text-xl font-bold">Chat-Craft</h1>
@@ -76,7 +76,7 @@ export default function Dashboard() {
               {theme === "dark" ? (
                 <Sun size={18} />
               ) : (
-                <Moon className="text-black" size={18} />
+                <Moon className="text-white" size={18} />
               )}
             </Button>
           </div>

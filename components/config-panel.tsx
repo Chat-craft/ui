@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import axios from "axios";
 
 import { useToast } from "@/components/ui/use-toast"
 
@@ -35,6 +36,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
   const [activeConfigTab, setActiveConfigTab] = useState("docs")
   const [primaryColor, setPrimaryColor] = useState("#2563EB")
   const [uploadedDocs, setUploadedDocs] = useState<DocType[]>([])
+  const [apiKey, setApiKey] = useState("");
 
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -54,25 +56,6 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
       },
       {
         id: 2,
-        name: "FAQ Sheet.docx",
-        status: "training",
-        progress: 65,
-        version: 1,
-        type: "Word",
-        size: "1.1 MB",
-        date: "2023-04-09",
-      },
-      {
-        id: 3,
-        name: "Pricing Guide.xlsx",
-        status: "queued",
-        version: 2,
-        type: "Excel",
-        size: "0.8 MB",
-        date: "2023-04-08",
-      },
-      {
-        id: 4,
         name: "API Documentation.pdf",
         status: "trained",
         version: 1,
@@ -81,7 +64,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
         date: "2023-04-07",
       },
       {
-        id: 5,
+        id: 3,
         name: "User Guide.docx",
         status: "trained",
         version: 2,
@@ -95,23 +78,23 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
   const handleBrowseFiles = () => {
     fileInputRef.current?.click()
   }
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
       handleFiles(Array.from(files))
     }
   }
-
+  
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(true)
   }
-
+  
   const handleDragLeave = () => {
     setIsDragging(false)
   }
-
+  
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
@@ -121,9 +104,8 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
   }
   
   const handleFiles = (files: File[]) => {
-    // Process the files
     const newDocs: DocType[] = files.map((file, index) => {
-    const fileType = getFileType(file.name)
+      const fileType = getFileType(file.name)
       return {
         id: Date.now() + index,
         name: file.name,
@@ -134,14 +116,85 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
         date: new Date().toISOString().split("T")[0],
       }
     })
+  
     setUploadedDocs((prev) => [...newDocs, ...prev])
-    // Show success toast
+  
     toast({
-      title: "Files uploaded successfully",
-      description: `${files.length} file(s) have been queued for training.`,
+      title: "Files queued for upload",
+      description: `${files.length} file(s) have been queued.`,
       variant: "success",
     })
- }
+  
+    files.forEach((file, idx) => {
+      uploadFile({
+        file,
+        docId: newDocs[idx].id,
+        userId: "67f2cedfe24b7b94d496ebb4", // TODO: Replace with actual user id
+        docName: file.name,
+        docType: getFileType(file.name),
+        docUrl: "your-doc-url", // TODO: Replace with actual doc url (if needed)
+        updateInterval: "-1" // or "" or undefined if not needed
+      })
+    })
+  }
+  
+  const uploadFile = async ({
+    file,
+    docId,
+    userId,
+    docName,
+    docType,
+    docUrl,
+    updateInterval
+  }: {
+    file: File
+    docId: number
+    userId: string
+    docName: string
+    docType?: string
+    docUrl: string
+    updateInterval?: string
+  }) => {
+    const formData = new FormData()
+    formData.append("user_id", userId)
+    formData.append("doc_name", docName)
+    if (docType) formData.append("doc_type", docType)
+    formData.append("doc_url", docUrl)
+    if (updateInterval) formData.append("update_interval", updateInterval)
+    formData.append("file", file)
+  
+    try {
+      await axios.post(
+        "http://192.168.12.215:8000/v1/upload/file",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data", "x-api-key" : "entities-api-key" }
+        }
+      )
+      setUploadedDocs((prev) =>
+        prev.map((doc) =>
+          doc.id === docId ? { ...doc, status: "uploaded" } : doc
+        )
+      )
+      toast({
+        title: "File uploaded",
+        description: `${file.name} uploaded successfully.`,
+        variant: "success",
+      })
+    } catch (error) {
+      setUploadedDocs((prev) =>
+        prev.map((doc) =>
+          doc.id === docId ? { ...doc, status: "error" } : doc
+        )
+      )
+      toast({
+        title: "Upload failed",
+        description: `Failed to upload ${file.name}`,
+        variant: "destructive",
+      })
+    }
+  }
+
   const getFileType = (filename: string) => {
     const extension = filename.split(".").pop()?.toLowerCase()
     switch (extension) {
@@ -176,7 +229,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
   return (
     <div className="h-full overflow-auto">
       <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Configuration Panel</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">Configuration Panel</h2>
 
         {activeTab === "bot-management" && (
           <Tabs defaultValue="docs" value={activeConfigTab} onValueChange={setActiveConfigTab}>
@@ -201,7 +254,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
                     <Upload className="mx-auto h-8 w-8 text-gray-400" />
                     <p className="mt-2 text-sm font-medium">Drag and drop files or</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Supports Google Docs, Sheets, PDFs, and more</p>
-                    <Button size="sm" variant="secondary" className="mt-2" onClick={handleBrowseFiles}>
+                    <Button size="sm" variant="secondary" className="mt-2 cursor-pointer" onClick={handleBrowseFiles}>
                       Browse Files
                     </Button>
                     <input
@@ -210,7 +263,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
                       className="hidden"
                       multiple
                       onChange={handleFileChange}
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.ppt,.pptx"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.csv"
                     />
                   </div>
 
@@ -225,10 +278,10 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {doc.status === "trained" ? (
-                            <div className="flex items-center gap-1 text-green-500">
-                              <Check className="h-4 w-4" />
-                              <span className="text-xs">Trained</span>
+                          {doc.status === "queued" ? (
+                            <div className="flex items-center gap-1 text-amber-500">
+                              <Clock className="h-4 w-4" />
+                              <span className="text-xs">Queued</span>
                             </div>
                           ) : doc.status === "training" ? (
                             <div className="w-24">
@@ -236,10 +289,10 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
                               <p className="text-xs text-gray-500 dark:text-gray-400 text-right mt-1">{doc.progress}%</p>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1 text-amber-500">
-                              <Clock className="h-4 w-4" />
-                              <span className="text-xs">Queued</span>
-                            </div>
+                            <div className="flex items-center gap-1 text-green-500">
+                            <Check className="h-4 w-4" />
+                            <span className="text-xs">Trained</span>
+                          </div>
                           )}
                           <Button
                           variant="ghost"
@@ -707,7 +760,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
                 <div className="space-y-2">
                   <Label htmlFor="api-key">API Key</Label>
                   <div className="flex gap-2">
-                    <Input id="api-key" type="password" value="sk-••••••••••••••••••••••" readOnly />
+                    <Input id="api-key" type="password" value={apiKey} readOnly />
                     <Button variant="outline" size="icon">
                       <RefreshCw className="h-4 w-4" />
                     </Button>

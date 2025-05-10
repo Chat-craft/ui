@@ -10,10 +10,17 @@ import {
   ThumbsDown,
   Bot,
   User,
+  Copy,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import axios from "axios";
+
 
 type Message = {
   id: string;
@@ -27,8 +34,11 @@ type Message = {
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [exportIframe,setExportIframe] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const exportTextRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMessages([
@@ -68,75 +78,185 @@ export default function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
-
+  
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       content: input,
       role: "user",
       timestamp: new Date(),
     };
-
+  
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+  
+    // Show loading message
+    const loadingId = `assistant-loading-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: loadingId,
+        content: "",
+        role: "assistant",
+        timestamp: new Date(),
+        isLoading: true,
+      },
+    ]);
+  
+    try {
+   
+      const response = await axios.post(
+        "http://192.168.12.215:8000/v1/query/prompt?user_id=67f2cedfe24b7b94d496ebb4",
+        {
+          query: input,
+        },
+        {
+          headers: {
+            "x-api-key": "entities-api-key"      
+          },
+        }
+      );
 
-    const loadingMessage: Message = {
-      id: `assistant-loading-${Date.now()}`,
-      content: "",
-      role: "assistant",
-      timestamp: new Date(),
-      isLoading: true,
-    };
-
-    setMessages((prev) => [...prev, loadingMessage]);
-
-    setTimeout(() => {
+      const answer = response.data.data?.answer?.data?.llm_answer || "No answer found.";
+  
+      // Remove loading and add assistant's response
       setMessages((prev) => {
-        const newMessages = [...prev];
-        const loadingIndex = newMessages.findIndex((m) => m.isLoading);
-
-        if (loadingIndex !== -1) {
-          newMessages[loadingIndex] = {
-            id: newMessages[loadingIndex].id,
-            content: "I understand you need help. Let me assist you with that request.",
+        const newMessages = prev.filter((m) => m.id !== loadingId);
+        return [
+          ...newMessages,
+          {
+            id: `assistant-${Date.now()}`,
+            content: answer,
             role: "assistant",
             timestamp: new Date(),
-            quickReplies: ["Tell me more", "That's not what I meant", "Thank you"],
-          };
-        }
-
-        return newMessages;
+            quickReplies: [
+              "Tell me more",
+              "That's not what I meant",
+              "Thank you",
+            ],
+          },
+        ];
       });
-    }, 1500);
+    } catch (err) {
+      setMessages((prev) => {
+        const newMessages = prev.filter((m) => m.id !== loadingId);
+        return [
+          ...newMessages,
+          {
+            id: `assistant-${Date.now()}`,
+            content: "Sorry, I couldn't get a response from the server.",
+            role: "assistant",
+            timestamp: new Date(),
+          },
+        ];
+      });
+    }
   };
+  
 
-  const handleQuickReply = (reply: string) => {
+  const handleQuickReply = async (reply: string) => {
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       content: reply,
       role: "user",
       timestamp: new Date(),
     };
-
+  
     setMessages((prev) => [...prev, userMessage]);
-
-    setTimeout(() => {
-      const botMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        content: `I'm processing your request: "${reply}"`,
+  
+    // Show loading message
+    const loadingId = `assistant-loading-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: loadingId,
+        content: "",
         role: "assistant",
         timestamp: new Date(),
-        quickReplies: ["Tell me more", "That's not what I meant", "Thank you"],
-      };
+        isLoading: true,
+      },
+    ]);
+  
+    try {
+      const response = await axios.post(
+        "http://192.168.12.215:8000/v1/query/prompt?user_id=67f2cedfe24b7b94d496ebb4",
+        {
+          query: reply,
+        },
+        {
+          headers: {
+            "x-api-key": "entities-api-key"
+          },
+        }
+      );
 
-      setMessages((prev) => [...prev, botMessage]);
-    }, 1000);
+      const answer = response.data.data?.answer?.data?.llm_answer || "No answer found.";
+  
+      setMessages((prev) => {
+        const newMessages = prev.filter((m) => m.id !== loadingId);
+        return [
+          ...newMessages,
+          {
+            id: `assistant-${Date.now()}`,
+            content: answer,
+            role: "assistant",
+            timestamp: new Date(),
+            quickReplies: [
+              "Tell me more",
+              "That's not what I meant",
+              "Thank you",
+            ],
+          },
+        ];
+      });
+    } catch (err) {
+      setMessages((prev) => {
+        const newMessages = prev.filter((m) => m.id !== loadingId);
+        return [
+          ...newMessages,
+          {
+            id: `assistant-${Date.now()}`,
+            content: "Sorry, I couldn't get a response from the server.",
+            role: "assistant",
+            timestamp: new Date(),
+          },
+        ];
+      });
+    }
   };
+  
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString([], {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  const getExportText = () => {
+  return `
+      <iframe
+        src="http://localhost:3000/chat-iframe"
+        width="400"
+        height="600"
+        allow="clipboard-write"
+      ></iframe>
+  `
+  }
+
+  const copyToClipboard = () => {
+    const text = getExportText()
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -145,10 +265,10 @@ export default function ChatInterface() {
           <Bot className="h-5 w-5 text-blue-500" />
           <h2 className="text-lg font-semibold">Chat Session</h2>
         </div>
-        {/* <Button variant="outline" size="sm" className="flex items-center gap-1">
+        <Button onClick={() => setExportIframe(true)} variant="outline" size="sm" className="flex items-center gap-1 cursor-pointer">
           <Download className="h-4 w-4" />
           <span>Export Chat</span>
-        </Button> */}
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {messages.map((message) => (
@@ -266,6 +386,54 @@ export default function ChatInterface() {
           </Button>
         </div>
       </div>
+
+      {exportIframe && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            // Close the overlay when clicking the background (not the card)
+            if (e.target === e.currentTarget) {
+              setExportIframe(false)
+            }
+          }}
+        >
+          <Card className="w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div
+              ref={exportTextRef}
+              className="flex-1 overflow-y-auto p-4 whitespace-pre-wrap text-orange-400 font-mono text-sm bg-gray-50 dark:bg-gray-900 rounded-b-lg"
+            >
+              <div className="flex justify-end">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "flex items-center gap-1 cursor-pointer",
+                      copied && "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+                    )}
+                    onClick={copyToClipboard}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+              </div>
+              <SyntaxHighlighter
+                  language="html"
+                  style={oneDark}
+                  customStyle={{
+                    background: 'transparent',
+                    fontSize: '1.1rem',
+                    fontFamily: 'monospace',
+                    color: '#fb923c', // Tailwind orange-400
+                  }}
+                  codeTagProps={{
+                    className: 'whitespace-pre-wrap'
+                  }}
+                >
+                  {getExportText()}
+            </SyntaxHighlighter>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
