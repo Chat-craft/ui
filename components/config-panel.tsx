@@ -36,7 +36,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
   const [activeConfigTab, setActiveConfigTab] = useState("docs")
   const [primaryColor, setPrimaryColor] = useState("#2563EB")
   const [uploadedDocs, setUploadedDocs] = useState<DocType[]>([])
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState("**************************");
 
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -165,7 +165,7 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
   
     try {
       await axios.post(
-        "http://192.168.12.215:8000/v1/upload/file",
+        "http://10.251.75.84:8000/v1/upload/file",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data", "x-api-key" : "entities-api-key" }
@@ -797,9 +797,11 @@ export default function ConfigPanel({ activeTab }: ConfigPanelProps) {
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { name: "John Doe", email: "john@example.com", role: "Admin" },
-                    { name: "Jane Smith", email: "jane@example.com", role: "Editor" },
-                    { name: "Bob Johnson", email: "bob@example.com", role: "Viewer" },
+                    { name: "Nikhil", email: "nikhil@example.com", role: "Admin" },
+                    { name: "Kunal", email: "kunal@example.com", role: "Editor" },
+                    { name: "Kenil", email: "kenil@example.com", role: "Viewer" },
+                    { name: "Deven", email: "deven@example.com", role: "Viewer" },
+                    { name: "Muqtadir", email: "muqtadir@example.com", role: "Viewer" },
                   ].map((user, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

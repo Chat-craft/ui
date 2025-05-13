@@ -23,7 +23,6 @@ export const Auth = ({type}) => {
     // }
  
     return <div className="bg-white text-black h-screen  flex flex-col justify-center">
-        {userDetails.name} {userDetails.email}
         <div className="flex justify-center">
             <div>
                 <div className="px-10 text-center">

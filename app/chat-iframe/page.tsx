@@ -107,7 +107,7 @@ export default function ChatInterface() {
     try {
    
       const response = await axios.post(
-        "http://192.168.12.215:8000/v1/query/prompt?user_id=67f2cedfe24b7b94d496ebb4",
+        "http://10.251.75.84:8000/v1/query/prompt?user_id=67f2cedfe24b7b94d496ebb4",
         {
           query: input,
         },
@@ -180,7 +180,7 @@ export default function ChatInterface() {
   
     try {
       const response = await axios.post(
-        "http://192.168.12.215:8000/v1/query/prompt?user_id=67f2cedfe24b7b94d496ebb4",
+        "http://10.251.75.84:8000/v1/query/prompt?user_id=67f2cedfe24b7b94d496ebb4",
         {
           query: reply,
         },

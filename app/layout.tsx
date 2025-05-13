@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Enterprise Chatbot Dashboard",
-  description: "Modern enterprise chatbot management interface",
+  title: "Chat-Craft",
+  description: "Modern enterprise chatbot as a service tool",
 }
 
 export default function RootLayout({

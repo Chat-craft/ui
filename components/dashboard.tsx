@@ -111,29 +111,6 @@ export default function Dashboard() {
               <span className="text-sm text-gray-500 dark:text-gray-400">Active</span>
             </div>
           </div>
-
-          {/* Collaborators */}
-          <div className="flex items-center gap-4">
-            {/* Online Collaborators */}
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">2 collaborators online</span>
-            </div>
-
-            {/* Collaborator Avatars */}
-            <div className="flex -space-x-2">
-              {["JD", "KL"].map((initials, index) => (
-                <div
-                  key={index}
-                  className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                    index === 0 ? "bg-blue-500" : "bg-blue-600"
-                  } text-white`}
-                >
-                  {initials}
-                </div>
-              ))}
-            </div>
-          </div>
         </header>
 
         {/* Content */}
